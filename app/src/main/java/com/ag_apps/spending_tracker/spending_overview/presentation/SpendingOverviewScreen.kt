@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -74,8 +76,10 @@ import com.ag_apps.spending_tracker.core.presentation.util.Background
 import com.ag_apps.spending_tracker.spending_overview.presentation.util.formatDate
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.ceil
 
 @Composable
 
@@ -116,9 +120,6 @@ private fun SpendingOverviewScreen(
     )
 
     Scaffold(
-        modifier = Modifier.nestedScroll(
-            scrollBehavior.nestedScrollConnection
-        ),
         floatingActionButton = {
             Column {
                 FloatingActionButton(
@@ -153,19 +154,20 @@ private fun SpendingOverviewScreen(
                         .padding(bottom = 8.dp)
                 )
             }
-        }
+        },
+
+
     ) { paddingValues ->
         Background()
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize()
+                .fillMaxWidth()
         ) {
-            // Add the calendar at the top
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 shape = RoundedCornerShape(22.dp),
                 elevation = CardDefaults.elevatedCardElevation(
                     defaultElevation = 4.dp
@@ -184,12 +186,13 @@ private fun SpendingOverviewScreen(
 //                    }
                 )
             }
+            SpendingList(
+                state = state,
+                onDeleteSpending = onDeleteSpendingClick
+            )
+
         }
-        SpendingList(
-            state = state,
-            modifier = Modifier.padding(paddingValues),
-            onDeleteSpending = onDeleteSpendingClick
-        )
+
 
     }
 
@@ -199,7 +202,7 @@ fun SpendingCalendarGrid(
     modifier: Modifier = Modifier,
     spendingList: List<Spending>
 ) {
-    val today = LocalDate.now()
+    var today = LocalDate.now()
     val (currentMonth, setCurrentMonth) = remember { mutableStateOf(today.withDayOfMonth(1)) }
 
     // Group spendings by date
@@ -212,50 +215,106 @@ fun SpendingCalendarGrid(
     // Find max spending for color intensity calculation
     val maxSpending = spendingsByDate.values.maxOrNull() ?: 0.0
     val weeks = List(54 * 4) { today.minusWeeks(it.toLong()) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp), // Optional padding around the row
-        horizontalArrangement = Arrangement.spacedBy(8.dp) // Space between left and right
-    ) {
-        Column(
-            modifier = Modifier.padding(end = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+
+    val startDate = LocalDate.now()
+    val year = startDate.year
+    val month = startDate.monthValue
+
+    val daysInMonth = YearMonth.of(year, month).lengthOfMonth()
+    val firstDayOfMonth = LocalDate.of(year, month, 1)
+    val firstDayOfWeek = (firstDayOfMonth.dayOfWeek.value % 7) // Adjust for Sunday -> Saturday
+    val totalCells = firstDayOfWeek + daysInMonth
+    val columns = 7 // Days in a week (Sunday -> Saturday)
+
+
+        // Days of week header row
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Navigation buttons
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            listOf("Mon", "Wed", "Fri").forEach { day ->
-                Text(
-                    text = day,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            IconButton(onClick = { today = today.minusMonths(1) }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Previous Month"
+                )
+            }
+            Text(
+                text = today.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = { today = today.plusMonths(1) }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = "Next Month"
                 )
             }
         }
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-
-        ) {
-            // Use the correct scope for items()
-            items(weeks) { currentWeek ->
-                Column(modifier = Modifier.fillMaxWidth(),
+        // Calendar grid row
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)) {
+            for (dayIndex in 0 until columns) {
+                Column(
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    repeat(7) { dayIndex ->
-                        val date = currentWeek.plusDays(dayIndex.toLong())
-                        val spending = spendingsByDate[date] ?: 0.0
-                        CalendarDay(
-                            date = date,
-                            spending = spending,
-                            spendingCount = 0,
-                            maxSpending = maxSpending,
-                            maxCount = 0,
-                            onClick = { /* Handle day click */ }
-                        )
+                    val dayName = when (dayIndex) {
+                        0 -> "Sun"
+                        1 -> "Mon"
+                        2 -> "Tue"
+                        3 -> "Wed"
+                        4 -> "Thu"
+                        5 -> "Fri"
+                        else -> "Sat"
+                    }
 
+                    Text(
+                        text = dayName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+
+                    Column(
+
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Generate dates for this column
+                        for (weekIndex in 0 until ceil(totalCells / 7.0).toInt()) {
+                            val cellIndex = weekIndex * 7 + dayIndex
+                            val date =
+                                if (cellIndex >= firstDayOfWeek && cellIndex < firstDayOfWeek + daysInMonth) {
+                                    firstDayOfMonth.plusDays((cellIndex - firstDayOfWeek).toLong())
+                                } else null
+
+                            if (date != null) {
+                                val spending = spendingsByDate[date] ?: 0.0
+                                CalendarDay(
+                                    date = date,
+                                    spending = spending,
+                                    spendingCount = 0,
+                                    maxSpending = maxSpending,
+                                    maxCount = 0,
+                                    onClick = { }
+                                )
+                            } else {
+                                Spacer(
+                                    modifier = Modifier
+                                        .aspectRatio(1f)
+                                        .padding(4.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
+            }
     }
 }
 fun calculateDate(weekIndex: Int, dayIndex: Int): LocalDate {
@@ -278,8 +337,8 @@ private fun CalendarDay(
 
     Box(
         modifier = Modifier
-            .size(12.dp)
-            .clip(RoundedCornerShape(2.dp))
+            .size(42.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(color = androidx.compose.ui.graphics.Color(
                 red = 0f,
                 green = (countIntensity.toFloat() * 0.8f).coerceIn(0f, 0.8f), // Ensure all are Float
