@@ -12,10 +12,6 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-/**
- * @author Ahmed Guedmioui
- */
-
 val coreModule = module {
     single {
         Room.databaseBuilder(

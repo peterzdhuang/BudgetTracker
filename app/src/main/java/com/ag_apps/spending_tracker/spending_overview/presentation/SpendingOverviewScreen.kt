@@ -20,10 +20,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -33,6 +39,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,6 +51,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,6 +61,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -64,10 +73,9 @@ import com.ag_apps.spending_tracker.core.presentation.ui.theme.montserrat
 import com.ag_apps.spending_tracker.core.presentation.util.Background
 import com.ag_apps.spending_tracker.spending_overview.presentation.util.formatDate
 import org.koin.androidx.compose.koinViewModel
-
-/**
- * @author Ahmed Guedmioui
- */
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
 
@@ -148,7 +156,35 @@ private fun SpendingOverviewScreen(
         }
     ) { paddingValues ->
         Background()
-
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
+            // Add the calendar at the top
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(22.dp),
+                elevation = CardDefaults.elevatedCardElevation(
+                    defaultElevation = 4.dp
+                )
+            ) {
+                SpendingCalendarGrid(
+                    spendingList = state.spendingList,
+//                    onDateClick = { date ->
+//                        // You'll need to add handling for date clicks
+//                        // Could filter the list to show only items from this date
+//                        val dateSpending = state.spendingList.filter {
+//                            it.date.toLocalDate() == date
+//                        }
+//                        // You might want to add this to your ViewModel:
+//                        // onAction(SpendingOverviewAction.OnDateSelected(date))
+//                    }
+                )
+            }
+        }
         SpendingList(
             state = state,
             modifier = Modifier.padding(paddingValues),
@@ -158,6 +194,118 @@ private fun SpendingOverviewScreen(
     }
 
 }
+@Composable
+fun SpendingCalendarGrid(
+    modifier: Modifier = Modifier,
+    spendingList: List<Spending>
+) {
+    val today = LocalDate.now()
+    val (currentMonth, setCurrentMonth) = remember { mutableStateOf(today.withDayOfMonth(1)) }
+
+    // Group spendings by date
+    val spendingsByDate = spendingList.groupBy {
+        it.dateTimeUtc.toLocalDate()
+    }.mapValues { (_, spendings) ->
+        spendings.sumOf { it.price }
+    }
+
+    // Find max spending for color intensity calculation
+    val maxSpending = spendingsByDate.values.maxOrNull() ?: 0.0
+    val weeks = List(54 * 4) { today.minusWeeks(it.toLong()) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp), // Optional padding around the row
+        horizontalArrangement = Arrangement.spacedBy(8.dp) // Space between left and right
+    ) {
+        Column(
+            modifier = Modifier.padding(end = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            listOf("Mon", "Wed", "Fri").forEach { day ->
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+            }
+        }
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+
+        ) {
+            // Use the correct scope for items()
+            items(weeks) { currentWeek ->
+                Column(modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    repeat(7) { dayIndex ->
+                        val date = currentWeek.plusDays(dayIndex.toLong())
+                        val spending = spendingsByDate[date] ?: 0.0
+                        CalendarDay(
+                            date = date,
+                            spending = spending,
+                            spendingCount = 0,
+                            maxSpending = maxSpending,
+                            maxCount = 0,
+                            onClick = { /* Handle day click */ }
+                        )
+
+                    }
+                }
+            }
+        }
+    }
+}
+fun calculateDate(weekIndex: Int, dayIndex: Int): LocalDate {
+    val startDate = LocalDate.of(2024, 1, 1) // Start date of your calendar
+    return startDate.plusDays((weekIndex * 7 + dayIndex).toLong())
+}
+
+
+@Composable
+private fun CalendarDay(
+    date: LocalDate,
+    spending: Double,
+    spendingCount: Int,
+    maxSpending: Double,
+    maxCount: Int,
+    onClick: () -> Unit
+) {
+    val spendingIntensity = if (maxSpending > 0) (spending / maxSpending).coerceIn(0.0, 1.0) else 0.0
+    val countIntensity = if (maxCount > 0) (spendingCount.toDouble() / maxCount).coerceIn(0.0, 1.0) else 0.0
+
+    Box(
+        modifier = Modifier
+            .size(12.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(color = androidx.compose.ui.graphics.Color(
+                red = 0f,
+                green = (countIntensity.toFloat() * 0.8f).coerceIn(0f, 0.8f), // Ensure all are Float
+                blue = (spendingIntensity.toFloat() * 0.8f).coerceIn(0f, 0.8f),
+                alpha = 1f
+            ))
+            .clickable(onClick = onClick)
+    )
+
+}
+
+private fun getVisibleMonths(startDate: LocalDate, endDate: LocalDate): List<String> {
+    val months = mutableListOf<String>()
+    var currentDate = startDate
+
+    while (!currentDate.isAfter(endDate)) {
+        val monthName = currentDate.month.name
+        if (!months.contains(monthName)) {
+            months.add(monthName)
+        }
+        currentDate = currentDate.plusDays(1)
+    }
+
+    return months
+}
+
 
 @Composable
 fun SpendingList(
@@ -412,6 +560,8 @@ fun DatePickerDropDownMenu(
 
 }
 
+
+
 @Preview
 @Composable
 private fun SpendingOverviewScreenPreview() {
@@ -423,3 +573,5 @@ private fun SpendingOverviewScreenPreview() {
             onDeleteSpendingClick = {})
     }
 }
+
+

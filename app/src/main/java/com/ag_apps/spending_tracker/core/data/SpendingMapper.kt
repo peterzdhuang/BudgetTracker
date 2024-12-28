@@ -5,10 +5,6 @@ import com.ag_apps.spending_tracker.core.domain.Spending
 import java.time.Instant
 import java.time.ZoneId
 
-/**
- * @author Ahmed Guedmioui
- */
-
 fun SpendingEntity.toSpending(): Spending = Spending(
     spendingId = spendingId ?: 0,
     name = name,

@@ -12,9 +12,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-/**
- * @author Ahmed Guedmioui
- */
 class RoomSpendingDataSource(
     private val dao: SpendingDao
 ) : LocalSpendingDataSource {

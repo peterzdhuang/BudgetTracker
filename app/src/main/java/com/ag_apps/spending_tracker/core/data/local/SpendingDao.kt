@@ -4,9 +4,6 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 
-/**
- * @author Ahmed Guedmioui
- */
 @Dao
 interface SpendingDao {
 

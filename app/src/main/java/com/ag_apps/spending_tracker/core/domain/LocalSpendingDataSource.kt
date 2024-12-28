@@ -2,9 +2,6 @@ package com.ag_apps.spending_tracker.core.domain
 
 import java.time.ZonedDateTime
 
-/**
- * @author Ahmed Guedmioui
- */
 interface LocalSpendingDataSource {
 
     suspend fun getAllSpendings(): List<Spending>

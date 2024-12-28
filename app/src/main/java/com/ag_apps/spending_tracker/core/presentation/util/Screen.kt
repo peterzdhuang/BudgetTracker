@@ -1,8 +1,5 @@
 package com.ag_apps.spending_tracker.core.presentation.util
 
-/**
- * @author Ahmed Guedmioui
- */
 sealed interface Screen {
 
     @kotlinx.serialization.Serializable
