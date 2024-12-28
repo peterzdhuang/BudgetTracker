@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,16 +39,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ag_apps.spending_tracker.core.peresentaion.ui.theme.SpendingTrackerTheme
-import com.ag_apps.spending_tracker.core.peresentaion.ui.theme.montserrat
-import com.ag_apps.spending_tracker.core.peresentaion.util.Background
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
+import com.ag_apps.spending_tracker.core.presentation.ui.theme.SpendingTrackerTheme
+import com.ag_apps.spending_tracker.core.presentation.ui.theme.montserrat
+import com.ag_apps.spending_tracker.core.presentation.util.Background
 import org.koin.androidx.compose.koinViewModel
-
-/**
- * @author Ahmed Guedmioui
- */
 
 @Composable
 
@@ -67,7 +62,7 @@ fun SpendingDetailsScreenCore(
                         Toast.LENGTH_LONG
                     ).show()
                 }
-
+                SpendingDetailsEvent.NavigateBack -> onSaveSpending()
                 SpendingDetailsEvent.SaveSuccess -> onSaveSpending()
             }
         }
@@ -95,12 +90,37 @@ private fun SpendingDetailsScreen(
                     scrolledContainerColor = Color.Transparent
                 ),
                 title = {
-                    Text(
-                        text = "Add Spending",
-                        fontFamily = montserrat,
-                        fontSize = 25.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Add Spending",
+                            fontFamily = montserrat,
+                            fontSize = 25.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                },
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .size(45.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(0.3f))
+                            .clickable {
+                                onAction(SpendingDetailsAction.GoBack)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Go back",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
                 },
                 actions = {
                     Box(

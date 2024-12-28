@@ -60,6 +60,12 @@ class SpendingDetailsViewModel(
                     }
                 }
             }
+            SpendingDetailsAction.GoBack -> {
+                viewModelScope.launch {
+                    _eventChannel.send(SpendingDetailsEvent.NavigateBack)
+                }
+            }
+
         }
     }
 
@@ -75,5 +81,6 @@ class SpendingDetailsViewModel(
 
         return upsertSpendingUseCase(spending)
     }
+
 
 }

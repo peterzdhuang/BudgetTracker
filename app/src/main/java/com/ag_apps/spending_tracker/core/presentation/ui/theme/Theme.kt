@@ -1,4 +1,4 @@
-package com.ag_apps.spending_tracker.core.peresentaion.ui.theme
+package com.ag_apps.spending_tracker.core.presentation.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

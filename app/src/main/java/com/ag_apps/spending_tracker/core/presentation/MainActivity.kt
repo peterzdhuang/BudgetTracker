@@ -1,22 +1,19 @@
-package com.ag_apps.spending_tracker.core.peresentaion
+package com.ag_apps.spending_tracker.core.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ag_apps.spending_tracker.balance.presentation.BalanceScreenCore
-import com.ag_apps.spending_tracker.core.peresentaion.ui.theme.SpendingTrackerTheme
-import com.ag_apps.spending_tracker.core.peresentaion.util.Background
-import com.ag_apps.spending_tracker.core.peresentaion.util.Screen
+import com.ag_apps.spending_tracker.core.presentation.ui.theme.SpendingTrackerTheme
+import com.ag_apps.spending_tracker.core.presentation.util.Background
+import com.ag_apps.spending_tracker.core.presentation.util.Screen
 import com.ag_apps.spending_tracker.spending_details.presentation.SpendingDetailsScreenCore
 import com.ag_apps.spending_tracker.spending_overview.presentation.SpendingOverviewScreenCore
 

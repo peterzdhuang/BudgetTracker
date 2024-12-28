@@ -59,9 +59,9 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ag_apps.spending_tracker.core.domain.Spending
-import com.ag_apps.spending_tracker.core.peresentaion.ui.theme.SpendingTrackerTheme
-import com.ag_apps.spending_tracker.core.peresentaion.ui.theme.montserrat
-import com.ag_apps.spending_tracker.core.peresentaion.util.Background
+import com.ag_apps.spending_tracker.core.presentation.ui.theme.SpendingTrackerTheme
+import com.ag_apps.spending_tracker.core.presentation.ui.theme.montserrat
+import com.ag_apps.spending_tracker.core.presentation.util.Background
 import com.ag_apps.spending_tracker.spending_overview.presentation.util.formatDate
 import org.koin.androidx.compose.koinViewModel
 

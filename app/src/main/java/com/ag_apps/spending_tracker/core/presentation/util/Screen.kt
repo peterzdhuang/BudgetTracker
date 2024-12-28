@@ -1,4 +1,4 @@
-package com.ag_apps.spending_tracker.core.peresentaion.util
+package com.ag_apps.spending_tracker.core.presentation.util
 
 /**
  * @author Ahmed Guedmioui
