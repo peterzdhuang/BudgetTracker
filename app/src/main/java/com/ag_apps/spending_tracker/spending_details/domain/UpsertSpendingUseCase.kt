@@ -3,9 +3,6 @@ package com.ag_apps.spending_tracker.spending_details.domain
 import com.ag_apps.spending_tracker.core.domain.LocalSpendingDataSource
 import com.ag_apps.spending_tracker.core.domain.Spending
 
-/**
- * @author Ahmed Guedmioui
- */
 class UpsertSpendingUseCase(
     private val spendingDataSource: LocalSpendingDataSource
 ) {

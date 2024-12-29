@@ -4,10 +4,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import kotlin.random.Random
 
-/**
- * @author Ahmed Guedmioui
- */
-
 fun randomColor(minBrightness: Int = 90): Int {
     val random = Random.Default
     val red = random.nextInt(minBrightness, 256)

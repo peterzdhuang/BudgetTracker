@@ -12,9 +12,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 
-/**
- * @author Ahmed Guedmioui
- */
 class SpendingDetailsViewModel(
     private val upsertSpendingUseCase: UpsertSpendingUseCase
 ) : ViewModel() {

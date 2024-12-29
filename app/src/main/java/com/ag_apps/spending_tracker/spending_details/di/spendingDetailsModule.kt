@@ -5,10 +5,6 @@ import com.ag_apps.spending_tracker.spending_details.presentation.SpendingDetail
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
-/**
- * @author Ahmed Guedmioui
- */
-
 val spendingDetailsModule = module {
     single { UpsertSpendingUseCase(get()) }
     viewModel { SpendingDetailsViewModel(get()) }

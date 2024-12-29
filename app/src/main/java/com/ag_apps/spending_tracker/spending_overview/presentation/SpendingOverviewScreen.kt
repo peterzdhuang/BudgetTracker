@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -73,10 +74,15 @@ import com.ag_apps.spending_tracker.core.domain.Spending
 import com.ag_apps.spending_tracker.core.presentation.ui.theme.SpendingTrackerTheme
 import com.ag_apps.spending_tracker.core.presentation.ui.theme.montserrat
 import com.ag_apps.spending_tracker.core.presentation.util.Background
+import com.ag_apps.spending_tracker.core.presentation.util.TopBarBackground
 import com.ag_apps.spending_tracker.spending_overview.presentation.util.formatDate
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
+import java.time.Month
+import java.time.Year
 import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
@@ -144,15 +150,6 @@ private fun SpendingOverviewScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                DatePickerDropDownMenu(
-                    state = state,
-                    onItemClick = { index ->
-                        onAction(SpendingOverviewAction.OnDateChange(index))
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 8.dp)
-                )
             }
         },
 
@@ -175,19 +172,14 @@ private fun SpendingOverviewScreen(
             ) {
                 SpendingCalendarGrid(
                     spendingList = state.spendingList,
-//                    onDateClick = { date ->
-//                        // You'll need to add handling for date clicks
-//                        // Could filter the list to show only items from this date
-//                        val dateSpending = state.spendingList.filter {
-//                            it.date.toLocalDate() == date
-//                        }
-//                        // You might want to add this to your ViewModel:
-//                        // onAction(SpendingOverviewAction.OnDateSelected(date))
-//                    }
+                    month = state.month,
+                    year = state.year,
+                    monthlySpendingList = state.monthlySpendingList,
+                    onAction = onAction
                 )
             }
             SpendingList(
-                state = state,
+                spendingList = state.spendingList,
                 onDeleteSpending = onDeleteSpendingClick
             )
 
@@ -200,25 +192,15 @@ private fun SpendingOverviewScreen(
 @Composable
 fun SpendingCalendarGrid(
     modifier: Modifier = Modifier,
-    spendingList: List<Spending>
+    spendingList: List<Spending>,
+    monthlySpendingList : List<Double>,
+    month: Int,
+    year: Int,
+    onAction: (SpendingOverviewAction) -> Unit
 ) {
-    var today = LocalDate.now()
-    val (currentMonth, setCurrentMonth) = remember { mutableStateOf(today.withDayOfMonth(1)) }
 
-    // Group spendings by date
-    val spendingsByDate = spendingList.groupBy {
-        it.dateTimeUtc.toLocalDate()
-    }.mapValues { (_, spendings) ->
-        spendings.sumOf { it.price }
-    }
 
-    // Find max spending for color intensity calculation
-    val maxSpending = spendingsByDate.values.maxOrNull() ?: 0.0
-    val weeks = List(54 * 4) { today.minusWeeks(it.toLong()) }
-
-    val startDate = LocalDate.now()
-    val year = startDate.year
-    val month = startDate.monthValue
+    val totalPrice = monthlySpendingList.sumOf { it }
 
     val daysInMonth = YearMonth.of(year, month).lengthOfMonth()
     val firstDayOfMonth = LocalDate.of(year, month, 1)
@@ -232,23 +214,55 @@ fun SpendingCalendarGrid(
     Column(modifier = Modifier.fillMaxWidth()) {
         // Navigation buttons
         Row(
-            modifier = Modifier.fillMaxWidth()
-                .padding(top = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = { today = today.minusMonths(1) }) {
+            IconButton(
+                onClick = { onAction(SpendingOverviewAction.OnMonthChange(month - 1)) },
+                modifier = Modifier
+                    .size(45.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(0.3f))
+                    .border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(0.6f),
+                        shape = RoundedCornerShape(13.dp)
+                    )
+
+
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Previous Month"
+                    contentDescription = "Previous Month",
                 )
             }
             Text(
-                text = today.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
-                style = MaterialTheme.typography.headlineMedium,
+                text = LocalDate.of(year, month, 1).format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                fontSize = 25.sp,
+                maxLines = 1,
+                fontFamily = montserrat,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 8.dp)
             )
-            IconButton(onClick = { today = today.plusMonths(1) }) {
+            IconButton(
+                onClick = { onAction(SpendingOverviewAction.OnMonthChange(month + 1)) },
+                modifier = Modifier
+                    .size(45.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(0.3f))
+                    .border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(0.6f),
+                        shape = RoundedCornerShape(13.dp)
+                    )
+
+                ) {
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = "Next Month"
@@ -257,7 +271,8 @@ fun SpendingCalendarGrid(
         }
         // Calendar grid row
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)) {
             for (dayIndex in 0 until columns) {
                 Column(
@@ -281,7 +296,6 @@ fun SpendingCalendarGrid(
                     )
 
                     Column(
-
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -294,99 +308,111 @@ fun SpendingCalendarGrid(
                                 } else null
 
                             if (date != null) {
-                                val spending = spendingsByDate[date] ?: 0.0
+                                val dayOfMonthIndex = date.dayOfMonth - 1
+                                println(monthlySpendingList)
                                 CalendarDay(
                                     date = date,
-                                    spending = spending,
-                                    spendingCount = 0,
-                                    maxSpending = maxSpending,
-                                    maxCount = 0,
-                                    onClick = { }
+                                    spending = if (dayOfMonthIndex in monthlySpendingList.indices) {
+                                        monthlySpendingList[dayOfMonthIndex]
+                                    } else {
+                                        0.0 // Default value when the list is empty or index is out of bounds
+                                    },
+                                    totalSpending = totalPrice,
+                                    onAction = onAction
                                 )
                             } else {
                                 Spacer(
                                     modifier = Modifier
-                                        .aspectRatio(1f)
-                                        .padding(4.dp)
+                                        .size(42.dp)
+                                        .clip(RoundedCornerShape(8.dp))
                                 )
                             }
                         }
                     }
                 }
             }
-            }
+        }
     }
 }
-fun calculateDate(weekIndex: Int, dayIndex: Int): LocalDate {
-    val startDate = LocalDate.of(2024, 1, 1) // Start date of your calendar
-    return startDate.plusDays((weekIndex * 7 + dayIndex).toLong())
-}
+
 
 
 @Composable
 private fun CalendarDay(
     date: LocalDate,
     spending: Double,
-    spendingCount: Int,
-    maxSpending: Double,
-    maxCount: Int,
-    onClick: () -> Unit
+    totalSpending: Double,
+    onAction: (SpendingOverviewAction) -> Unit,
 ) {
-    val spendingIntensity = if (maxSpending > 0) (spending / maxSpending).coerceIn(0.0, 1.0) else 0.0
-    val countIntensity = if (maxCount > 0) (spendingCount.toDouble() / maxCount).coerceIn(0.0, 1.0) else 0.0
-
+    println("Clicked date: $totalSpending $spending")
+    val colorIntensity = if (totalSpending > 0) (spending/ totalSpending).coerceIn(0.0, 1.0) else 0.0
+    println("Clicked date: $colorIntensity")
     Box(
         modifier = Modifier
             .size(42.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(color = androidx.compose.ui.graphics.Color(
-                red = 0f,
-                green = (countIntensity.toFloat() * 0.8f).coerceIn(0f, 0.8f), // Ensure all are Float
-                blue = (spendingIntensity.toFloat() * 0.8f).coerceIn(0f, 0.8f),
-                alpha = 1f
-            ))
-            .clickable(onClick = onClick)
+            .background(
+                color = if (spending == 0.0) {
+                    androidx.compose.ui.graphics.Color(0xFFB0B0B0) // Example gray color
+
+                } else {
+                    androidx.compose.ui.graphics.Color(
+                        red = 0f,
+                        green = (1 - colorIntensity.toFloat()).coerceIn(0.5f, 1f),
+                        blue = 0f,
+                        alpha = 1f
+                    )
+                }
+            )
+            .clickable(onClick = {
+                onAction(SpendingOverviewAction.OnDateChange(date.atStartOfDay(ZoneId.systemDefault())))
+            })
     )
-
 }
 
-private fun getVisibleMonths(startDate: LocalDate, endDate: LocalDate): List<String> {
-    val months = mutableListOf<String>()
-    var currentDate = startDate
 
-    while (!currentDate.isAfter(endDate)) {
-        val monthName = currentDate.month.name
-        if (!months.contains(monthName)) {
-            months.add(monthName)
-        }
-        currentDate = currentDate.plusDays(1)
-    }
-
-    return months
-}
 
 
 @Composable
 fun SpendingList(
     modifier: Modifier = Modifier,
-    state: SpendingOverviewState,
+    spendingList: List<Spending>,
     onDeleteSpending: (Int) -> Unit,
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            top = 20.dp, bottom = 80.dp
-        )
-    ) {
-        itemsIndexed(state.spendingList) { index, spending ->
-            SpendingItem(
-                spending = spending,
-                onDeleteSpending = { onDeleteSpending(spending.spendingId ?: -1) },
+    if (spendingList.isEmpty()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No Spending",
+                fontSize = 15.sp,
+                maxLines = 1,
+                fontFamily = montserrat,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
             )
-            Spacer(modifier = Modifier.height(20.dp))
+        }
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                top = 20.dp, bottom = 80.dp
+            )
+        ) {
+            itemsIndexed(spendingList) { index, spending ->
+                SpendingItem(
+                    spending = spending,
+                    onDeleteSpending = { onDeleteSpending(spending.spendingId ?: -1) },
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 }
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -510,37 +536,25 @@ fun SpendingOverviewTopBar(
             scrolledContainerColor = Color.Transparent
         ),
         scrollBehavior = scrollBehavior,
-        title = {
-            Text(
-                text = "$${balance}",
-                fontSize = 35.sp,
-                maxLines = 1,
-                fontFamily = montserrat,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        },
+        title = {}, // Remove the title
         actions = {
-            Box(
+            IconButton(
+                onClick = {},
+
                 modifier = Modifier
                     .size(45.dp)
                     .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(0.3f))
                     .border(
                         width = 2.dp,
                         color = MaterialTheme.colorScheme.primary.copy(0.6f),
                         shape = RoundedCornerShape(13.dp)
                     )
-                    .background(
-                        MaterialTheme.colorScheme.primaryContainer.copy(0.3f)
-                    )
-                    .clickable { onBalanceClick() },
-                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "$",
-                    fontSize = 26.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
+                Icon(
+                    imageVector = Icons.Default.AccountCircle, // Replace with your desired profile icon
+                    contentDescription = "Profile",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         },
@@ -579,6 +593,8 @@ fun DatePickerDropDownMenu(
                     text = zonedDateTime.formatDate(),
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     fontWeight = FontWeight.Normal,
+                    fontFamily = montserrat,
+
                     modifier = Modifier
                         .padding(16.dp)
                         .align(Alignment.CenterHorizontally)
@@ -586,6 +602,7 @@ fun DatePickerDropDownMenu(
                             isExpanded = false
                             onItemClick(index)
                         }
+
                 )
 
                 HorizontalDivider()
