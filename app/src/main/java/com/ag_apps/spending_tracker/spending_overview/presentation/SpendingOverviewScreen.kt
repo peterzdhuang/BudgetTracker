@@ -140,7 +140,11 @@ private fun SpendingOverviewScreen(
             }
         },
         topBar = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF2E5DA8).copy(alpha = 0.35f))
+            ) {
                 SpendingOverviewTopBar(
                     modifier = Modifier.fillMaxWidth(),
                     scrollBehavior = scrollBehavior,
@@ -536,7 +540,22 @@ fun SpendingOverviewTopBar(
             scrolledContainerColor = Color.Transparent
         ),
         scrollBehavior = scrollBehavior,
-        title = {}, // Remove the title
+        title = {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Overview",
+                    fontSize = 25.sp,
+                    maxLines = 1,
+                    fontFamily = montserrat,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        },
         actions = {
             IconButton(
                 onClick = {},
