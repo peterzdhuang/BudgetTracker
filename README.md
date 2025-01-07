@@ -7,6 +7,7 @@ The Kotlin Spending Tracker app is a cross-platform application designed to help
 ![BudgetTracker](images/budget1.png)
 ![BudgetTracker](images/budget4.png)
 
+<img src="images/budget1.png" alt="Spending Tracker" width="500">
 
 
 
