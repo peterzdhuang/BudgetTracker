@@ -1,4 +1,4 @@
-# The website github: [BudgetTrackerWebsite](https://github.com/peterzdhuang/BudgetTrackerWebsite)
+The website github: [BudgetTrackerWebsite](https://github.com/peterzdhuang/BudgetTrackerWebsite)
 
 
 ## Overview
