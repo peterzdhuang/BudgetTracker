@@ -1,5 +1,5 @@
+# The website github: [BudgetTrackerWebsite](https://github.com/peterzdhuang/BudgetTrackerWebsite)
 
-# Budget Tracker
 
 ## Overview
 The Kotlin Spending Tracker app is a cross-platform application designed to help users track their spending, visualize financial data, and synchronize it seamlessly across devices. By utilizing Jetpack Compose for an intuitive UI, Room for efficient local data storage, and AWS Aurora for robust cloud synchronization, this app ensures a smooth and reliable user experience both online and offline.
